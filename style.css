@@ -24,7 +24,6 @@ body {
     background-size: 500px;
     overflow: hidden;
     position: relative;
-    pointer-events: none;
 }
 
 body.shakeAnimation {
