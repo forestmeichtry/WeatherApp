@@ -9,6 +9,9 @@ function initializePage() {
     const roundButton = document.querySelector('.roundButtonContainer');
     roundButton.style.top = `${consoleScale * 470 - 10}px`;
 
+    const inputElement = document.createElement('div');
+    inputElement.classList.add('consoleInput', 'blurOut');
+
     isMobile = Math.min(window.screen.width, window.screen.height) < 770 
         || navigator.userAgent.indexOf("Mobi") > -1;
 
@@ -18,11 +21,17 @@ function initializePage() {
         roundButton.style.transform = `scale(.75)`;
         roundButton.style.top = `${(window.screen.width / 700) * 470 - 40}px`;
 
+        inputElement.classList.add('mobile');
+        inputElement.style.transform = `scale(${consoleScale})`;
+        document.querySelector('body').appendChild(inputElement);
+
         pillarArray.initializeArray(70);
         weatherConsole.initializeInput();
         return;
     }
     
+    console.log(inputElement)
+    document.querySelector('.consolePanel').appendChild(inputElement);
     pillarArray.initializeArray();
     weatherConsole.initializeInput();
 }
@@ -37,6 +46,7 @@ const weatherConsole = {
     
     // Called on page load, adds event listener for key inputs
     initializeInput() {
+        this.consoleInput = document.querySelector('.consoleInput'),
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Backspace' && this.consoleInput.textContent.length > 0 && this.inputEnabled) {
                 this.consoleInput.textContent = this.consoleInput.textContent.substring(0, this.consoleInput.textContent.length - 1);
@@ -236,8 +246,8 @@ const weatherConsole = {
         await new Promise(res => setTimeout(res, 500));
         this.swapScreen('sunrise');
 
-        // await new Promise(res => setTimeout(res, 1500));
-        // this.displayText('Hello!');
+        await new Promise(res => setTimeout(res, 1500));
+        this.displayText('Mobile Test Branch Version: 1.0');
 
         // await new Promise(res => setTimeout(res, 1500));
         // this.displayText("I can tell you the weather");

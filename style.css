@@ -234,6 +234,12 @@ body.shakeAnimation {
     animation-iteration-count: infinite;
 }
 
+.consoleInput.mobile {
+    position: absolute;
+    top: 10%;
+    width: 100%;
+}
+
 @keyframes blink {
     0% {opacity: 0%;}
     50% {opacity: 100%;}
