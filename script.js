@@ -9,9 +9,6 @@ function initializePage() {
     const roundButton = document.querySelector('.roundButtonContainer');
     roundButton.style.top = `${consoleScale * 470 - 10}px`;
 
-    const inputElement = document.createElement('div');
-    inputElement.classList.add('consoleInput', 'blurOut');
-
     isMobile = Math.min(window.screen.width, window.screen.height) < 770 
         || navigator.userAgent.indexOf("Mobi") > -1;
 
@@ -21,17 +18,10 @@ function initializePage() {
         roundButton.style.transform = `scale(.75)`;
         roundButton.style.top = `${(window.screen.width / 700) * 470 - 40}px`;
 
-        inputElement.classList.add('mobile');
-        inputElement.style.transform = `scale(${consoleScale})`;
-        document.querySelector('body').appendChild(inputElement);
-
         pillarArray.initializeArray(70);
         weatherConsole.initializeInput();
         return;
     }
-    
-    console.log(inputElement)
-    document.querySelector('.consolePanel').appendChild(inputElement);
     pillarArray.initializeArray();
     weatherConsole.initializeInput();
 }
@@ -49,9 +39,9 @@ const weatherConsole = {
         this.consoleInput = document.querySelector('.consoleInput'),
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Backspace' && this.consoleInput.textContent.length > 0 && this.inputEnabled) {
-                this.consoleInput.textContent = this.consoleInput.textContent.substring(0, this.consoleInput.textContent.length - 1);
+                this.consoleInput.value = this.consoleInput.value.substring(0, this.consoleInput.value.length - 1);
             } else if (/[A-Za-z\s,]+/.test(e.key) && e.key.length === 1 && this.inputEnabled) {
-                this.consoleInput.textContent += e.key;
+                this.consoleInput.value += e.key;
             } else if (e.key === 'Enter') {
                 pillarArray.click();
             }
@@ -63,7 +53,7 @@ const weatherConsole = {
         this.inputEnabled = false;
         this.displayText('Searching', 'searching');
         // this.changeCircuitState('glowing');
-        const location = this.consoleInput.textContent
+        const location = this.consoleInput.value;
         const url = `https://api.weatherapi.com/v1/current.json?key=68c11438bfb24241860201215232610&q=${location}`;
         const weatherPromise = fetch(url, {mode: 'cors'});
         weatherPromise.then(async (response) => {
