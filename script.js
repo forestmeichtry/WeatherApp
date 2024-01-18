@@ -240,8 +240,10 @@ const weatherConsole = {
     async raiseConsole() {
         const consoleElement = document.querySelector('.consoleWrapper');
 
-        await new Promise(res => setTimeout(res, 500));
-        this.changeCircuitState('pulsing');
+        if (!isMobile) {
+            await new Promise(res => setTimeout(res, 500));
+            this.changeCircuitState('pulsing');
+        }
 
         await new Promise(res => setTimeout(res, 2500));
         consoleElement.classList.add('raised');
