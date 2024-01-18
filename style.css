@@ -644,9 +644,9 @@ body.shakeAnimation {
 }
 
 .roundButtonContainer.refreshGlyph .roundButton .roundFace{
-    background-image: url(Assets/refresh.svg);
+    background-image: url(Assets/refreshGlyph.svg);
     background-position: center;
-    background-size: 70%;
+    background-size: 100%;
     cursor: pointer;
 }
 
