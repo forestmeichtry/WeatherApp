@@ -90,7 +90,7 @@ const weatherConsole = {
             pillarArray.wobbling = true;
 
             if (isMobile) {
-                pillarArray.wobble(1000);
+                pillarArray.wobble(500);
             } else {
                 pillarArray.wobble(300);
                 windController.toggleActiveWind();
@@ -116,6 +116,10 @@ const weatherConsole = {
     circuitMutable: true,
     circuitState: 'unset',
     async changeCircuitState(state) {
+        if (isMobile) {
+            return;
+        }
+
         const circuits = document.querySelectorAll('.circuit');
         
         if (state === 'pulsing' || (state === 'autoPulse' && this.circuitState === 'pulsing')) {
@@ -250,7 +254,7 @@ const weatherConsole = {
         this.swapScreen('sunrise');
 
         await new Promise(res => setTimeout(res, 1500));
-        this.displayText('Mobile Test Branch Version: 1.1');
+        this.displayText('Mobile Test Branch Version: 1.2');
 
         // await new Promise(res => setTimeout(res, 1500));
         // this.displayText("I can tell you the weather");
