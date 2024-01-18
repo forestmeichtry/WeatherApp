@@ -88,10 +88,15 @@ const weatherConsole = {
             this.swapScreen('weatherDisplay');
             pillarArray.changePillarGlyphs(this.weatherData.icon);
             pillarArray.wobbling = true;
-            pillarArray.wobble(300);
+
+            if (isMobile) {
+                pillarArray.wobble(1000);
+            } else {
+                pillarArray.wobble(300);
+                windController.toggleActiveWind();
+                windController.createWindgroup(this.weatherData.windDegree);
+            }
             pillarArray.enableRefresh();
-            windController.toggleActiveWind();
-            windController.createWindgroup(this.weatherData.windDegree);
         })
         .catch((error) => {
             console.log(error.message);
@@ -245,7 +250,7 @@ const weatherConsole = {
         this.swapScreen('sunrise');
 
         await new Promise(res => setTimeout(res, 1500));
-        this.displayText('Mobile Test Branch Version: 1.0');
+        this.displayText('Mobile Test Branch Version: 1.1');
 
         // await new Promise(res => setTimeout(res, 1500));
         // this.displayText("I can tell you the weather");
@@ -255,7 +260,6 @@ const weatherConsole = {
 
         await new Promise(res => setTimeout(res, 500));
         this.enableInput();
-
     },
 
     async enableInput() {
