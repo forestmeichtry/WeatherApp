@@ -211,12 +211,32 @@ body.shakeAnimation {
     white-space: pre-wrap;
 }
 
+.mobileInput {
+    display: flex;
+    align-items: center;
+    font-size: x-large;
+    margin-top: 20%;
+    border: 3px black solid;
+    border-radius: 4px;
+    height: 40px;
+    width: 60%;
+    filter: blur(1px);
+    transition-duration: .5s;
+    transition-timing-function: cubic-bezier(0, 0, 0.85, 1.04);
+    padding-left: 10px;
+    white-space: pre-wrap;
+    pointer-events: all;
+    background-color: var(--color_nyanza);
+    z-index: -1;
+}
+
 .consoleInput {
     display: flex;
     align-items: center;
     font-size: x-large;
     margin-top: 20%;
     border: 3px black solid;
+    border-radius: 4px;
     height: 40px;
     width: 60%;
     filter: blur(1px);

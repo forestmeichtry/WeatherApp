@@ -9,19 +9,29 @@ function initializePage() {
     const roundButton = document.querySelector('.roundButtonContainer');
     roundButton.style.top = `${consoleScale * 470 - 10}px`;
 
-    isMobile = Math.min(window.screen.width, window.screen.height) < 770 
-        || navigator.userAgent.indexOf("Mobi") > -1;
+    isMobile = Math.min(window.screen.width, window.screen.height) < 770;
 
     if (isMobile) {
         consoleWrapper.style.top = `-100px`;
         document.querySelector('.scanlines').classList.add('mobile');
         roundButton.style.transform = `scale(.75)`;
         roundButton.style.top = `${(window.screen.width / 700) * 470 - 40}px`;
+        
+        const mobileInput = document.createElement('input');
+        mobileInput.classList.add('mobileInput', 'blurOut');
+        document.querySelector('.consolePanel').appendChild(mobileInput);
+        weatherConsole.consoleInput = mobileInput;
 
         pillarArray.initializeArray(70);
         weatherConsole.initializeInput();
         return;
     }
+
+    const standardInput = document.createElement('div');
+    standardInput.classList.add('consoleInput', 'blurOut');
+    document.querySelector('.consolePanel').appendChild(standardInput);
+    weatherConsole.consoleInput = standardInput;
+
     pillarArray.initializeArray();
     weatherConsole.initializeInput();
 }
@@ -30,18 +40,16 @@ function initializePage() {
 const weatherConsole = {
     activeScreen: document.querySelector('.contentOne'),
     inactiveScreen: document.querySelector('.contentTwo'),
-    consoleInput: document.querySelector('.consoleInput'),
     inputEnabled: false,
     weatherData: {},
     
     // Called on page load, adds event listener for key inputs
     initializeInput() {
-        this.consoleInput = document.querySelector('.consoleInput'),
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && this.consoleInput.textContent.length > 0 && this.inputEnabled) {
-                this.consoleInput.value = this.consoleInput.value.substring(0, this.consoleInput.value.length - 1);
-            } else if (/[A-Za-z\s,]+/.test(e.key) && e.key.length === 1 && this.inputEnabled) {
-                this.consoleInput.value += e.key;
+            if (e.key === 'Backspace' && this.consoleInput.textContent.length > 0 && this.inputEnabled && !isMobile) {
+                this.consoleInput.textContent = this.consoleInput.textContent.substring(0, this.consoleInput.textContent.length - 1);
+            } else if (/[A-Za-z\s,]+/.test(e.key) && e.key.length === 1 && this.inputEnabled && !isMobile) {
+                this.consoleInput.textContent += e.key;
             } else if (e.key === 'Enter') {
                 pillarArray.click();
             }
@@ -53,7 +61,7 @@ const weatherConsole = {
         this.inputEnabled = false;
         this.displayText('Searching', 'searching');
         // this.changeCircuitState('glowing');
-        const location = this.consoleInput.value;
+        const location = isMobile ? this.consoleInput.value : this.consoleInput.textContent;
         const url = `https://api.weatherapi.com/v1/current.json?key=68c11438bfb24241860201215232610&q=${location}`;
         const weatherPromise = fetch(url, {mode: 'cors'});
         weatherPromise.then(async (response) => {
@@ -139,7 +147,7 @@ const weatherConsole = {
     // The display uses two screens with only one being shown at a time.
     // New content is added to the inactive screen and then transitioned to
     async swapScreen(screenClass) {
-        document.querySelector('.consoleInput').classList.add('blurOut');
+        this.consoleInput.classList.add('blurOut');
 
         // removes old classes from inactive screen before adding new content
         for (let screenClass of this.inactiveScreen.classList) {
