@@ -89,13 +89,11 @@ const weatherConsole = {
             pillarArray.changePillarGlyphs(this.weatherData.icon);
             pillarArray.wobbling = true;
 
-            if (isMobile) {
-                pillarArray.wobble(500);
-            } else {
-                pillarArray.wobble(300);
+            if (!isMobile) {
                 windController.toggleActiveWind();
                 windController.createWindgroup(this.weatherData.windDegree);
             }
+            pillarArray.wobble(300);
             pillarArray.enableRefresh();
         })
         .catch((error) => {
