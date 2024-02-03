@@ -129,6 +129,7 @@ const weatherConsole = {
         pillarArray.wobbling = false;
         windController.toggleActiveWind(false);
         rayController.rayEnd();
+        document.querySelector('#displayFilter').classList.add('hidden');
     },
 
     circuitMutable: true,
@@ -301,7 +302,7 @@ const rayController = {
     rays: [],
     diagonal: Math.sqrt(Math.pow((window.innerHeight * 3), 2) + Math.pow((window.innerWidth * .5), 2)),
     initializeSun() {
-        const angle = ((Math.atan((window.innerWidth * .5) / (window.innerHeight * 2)) * 180) / Math.PI);
+        const angle = ((Math.atan((window.innerWidth * .5) / (window.innerHeight * 2)) * 180) / Math.PI) + 10;
         
         // let maxAngle = ((Math.atan((window.innerWidth * 2) / window.innerHeight) * 180) / Math.PI);
         // const minAngle = ((Math.atan((window.innerWidth) / (window.innerHeight * 2)) * 180) / Math.PI) - 10;
@@ -329,6 +330,7 @@ const rayController = {
 
     shining: false,
     rayStart(delay) {
+        document.querySelector('#displayFilter').classList.remove('hidden');
         document.querySelector('#displayFilter').classList.add('sunShine');
         this.shining = true;
         this.sun.classList.add('rotateReset');
