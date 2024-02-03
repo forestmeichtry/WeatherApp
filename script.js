@@ -1,5 +1,6 @@
 let isMobile;
 const defaultCellSize = 130;
+const testVersion = '1.3';
 
 function initializePage() {
     const consoleWrapper = document.querySelector('.consoleWrapper');
@@ -24,6 +25,7 @@ function initializePage() {
 
         pillarArray.initializeArray(70);
         weatherConsole.initializeInput();
+        sunController.initializeSun();
         return;
     }
 
@@ -34,6 +36,7 @@ function initializePage() {
 
     pillarArray.initializeArray();
     weatherConsole.initializeInput();
+    sunController.initializeSun();
 }
 
 // Object that controls central display element and fetches weather data
@@ -76,25 +79,19 @@ const weatherConsole = {
             this.weatherData = {
                 condition: fetchedData.current.condition.text,
                 icon: fetchedData.current.condition.icon,
+                code: fetchedData.current.condition.code,
                 temp: fetchedData.current.temp_f,
                 windSpeed: fetchedData.current.wind_mph,
                 windDirection: fetchedData.current.wind_dir,
                 windDegree: fetchedData.current.wind_degree,
                 location: fetchedData.location.name,
                 region: fetchedData.location.region,
-                country: fetchedData.location.country
+                country: fetchedData.location.country,
+                isDay: fetchedData.current.is_day
             }
-            
-            this.swapScreen('weatherDisplay');
-            pillarArray.changePillarGlyphs(this.weatherData.icon);
-            pillarArray.wobbling = true;
 
-            if (!isMobile) {
-                windController.toggleActiveWind();
-                windController.createWindgroup(this.weatherData.windDegree);
-            }
-            pillarArray.wobble(300);
-            pillarArray.enableRefresh();
+            this.setWeatherEffects(this.weatherData.code);
+            
         })
         .catch((error) => {
             console.log(error.message);
@@ -109,6 +106,29 @@ const weatherConsole = {
                     break;
             }
         });
+    },
+
+    setWeatherEffects(code) {
+        if (this.weatherData.windSpeed > 12 && !isMobile) {
+            windController.toggleActiveWind();
+            windController.createWindgroup(this.weatherData.windDegree);
+        }
+
+        // testing
+        sunController.rayStart(1000);
+
+        this.swapScreen('weatherDisplay');
+        pillarArray.changePillarGlyphs(this.weatherData.icon);
+        pillarArray.wobbling = true;
+        pillarArray.wobble(300);
+        pillarArray.enableRefresh();
+    },
+
+    disableWeatherEffects() {
+        pillarArray.refreshEnabled = false;
+        pillarArray.wobbling = false;
+        windController.toggleActiveWind(false);
+        sunController.rayEnd();
     },
 
     circuitMutable: true,
@@ -254,7 +274,7 @@ const weatherConsole = {
         this.swapScreen('sunrise');
 
         await new Promise(res => setTimeout(res, 1500));
-        this.displayText('Mobile Test Branch Version: 1.2');
+        this.displayText(`Mobile Test Branch Version: ${testVersion}`);
 
         // await new Promise(res => setTimeout(res, 1500));
         // this.displayText("I can tell you the weather");
@@ -273,6 +293,97 @@ const weatherConsole = {
 
         await new Promise(res => setTimeout(res, 500));
         pillarArray.raiseButton('searchGlyph');
+    }
+}
+
+const sunController = {
+    sun: document.querySelector('#sun'),
+    rays: [],
+    initializeSun() {
+        const diagonal = Math.sqrt(Math.pow((window.innerHeight * 2), 2) + Math.pow((window.innerWidth * 1.5), 2));
+        let maxAngle = ((Math.atan((window.innerWidth * 2) / window.innerHeight) * 180) / Math.PI);
+        const minAngle = ((Math.atan((window.innerWidth) / (window.innerHeight * 2)) * 180) / Math.PI) - 10;
+        let currentAngle = minAngle;
+
+        const scaleModifier = (window.innerWidth / 1920);
+
+        const rayCount = 20;
+        for (let i = 0; i < rayCount; i++) {
+            const rayElement = document.createElement('div');
+            rayElement.classList.add('ray');
+            this.rays.push(rayElement);
+            this.sun.appendChild(rayElement);
+        }
+
+        for (let ray of this.rays) {
+            ray.style.height = `${diagonal * (getRandomInt(8, 11) * .1)}px`;
+            ray.style.width = `${70 * scaleModifier * (getRandomInt(6, 10) * .1)}px`;
+            ray.style.transform = `rotate(${currentAngle}deg)`;
+
+            currentAngle += (maxAngle - minAngle) / this.rays.length;
+        }
+
+        this.alternateRayArray = [...this.rays];
+    },
+
+    shining: false,
+    rayStart(delay) {
+        this.shining = true;
+        this.sun.classList.add('rotateReset');
+
+        for (let ray of this.rays) {
+            if (getRandomInt(0, 2)) {
+                ray.style.opacity = `${getRandomInt(3, 5) * .1}`;
+            }
+        }
+
+        setTimeout(() => {
+            this.alternateRays(delay);
+        }, delay);
+    },
+
+    rayEnd() {
+        if (!this.shining) {
+            return;
+        }
+
+        this.shining = false;
+        setTimeout(() => {
+            if (!this.shining) {
+                this.sun.classList.remove('rotateReset');
+            }
+        }, 3000);
+
+        for (let ray of this.rays) {
+            ray.style.opacity = 0;
+        }
+    },
+
+    alternateRayArray: [],
+    alternateRays(delay) {
+        if (!this.shining) {
+            return;
+        }
+
+        if (this.alternateRayArray.length > 0) {
+            const chosenRay = this.alternateRayArray.splice(getRandomInt(0, this.alternateRayArray.length - 1), 1);
+            if (chosenRay[0].style.opacity != 0) {
+                chosenRay[0].style.opacity = 0;
+            } else {
+                chosenRay[0].style.opacity = getRandomInt(3, 5) * .1;
+            }
+
+            setTimeout(() => {
+                this.alternateRayArray.push(chosenRay[0]);
+                if (!this.shining) {
+                    chosenRay[0].style.opacity = 0;
+                }
+            }, 4000);
+        }
+
+        setTimeout(() => {
+            this.alternateRays(delay);
+        }, delay);
     }
 }
 
@@ -800,9 +911,7 @@ const pillarArray = {
         }
 
         // weatherConsole.changeCircuitState('pulsing');
-        this.refreshEnabled = false;
-        this.wobbling = false;
-        windController.toggleActiveWind(false);
+        weatherConsole.disableWeatherEffects();
 
         weatherConsole.displayText('Where would you like to look? \n \n');
         setTimeout(() => {
