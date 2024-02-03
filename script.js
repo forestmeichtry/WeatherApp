@@ -1,6 +1,6 @@
 let isMobile;
 const defaultCellSize = 130;
-const testVersion = '1.4';
+const testVersion = '1.5';
 
 function initializePage() {
     const consoleWrapper = document.querySelector('.consoleWrapper');
@@ -25,7 +25,7 @@ function initializePage() {
 
         pillarArray.initializeArray(70);
         weatherConsole.initializeInput();
-        sunController.initializeSun();
+        rayController.initializeSun();
         return;
     }
 
@@ -36,7 +36,7 @@ function initializePage() {
 
     pillarArray.initializeArray();
     weatherConsole.initializeInput();
-    sunController.initializeSun();
+    rayController.initializeSun();
 }
 
 // Object that controls central display element and fetches weather data
@@ -115,7 +115,7 @@ const weatherConsole = {
         }
 
         // testing
-        sunController.rayStart(500);
+        rayController.rayStart(700);
 
         this.swapScreen('weatherDisplay');
         pillarArray.changePillarGlyphs(this.weatherData.icon);
@@ -128,7 +128,7 @@ const weatherConsole = {
         pillarArray.refreshEnabled = false;
         pillarArray.wobbling = false;
         windController.toggleActiveWind(false);
-        sunController.rayEnd();
+        rayController.rayEnd();
     },
 
     circuitMutable: true,
@@ -296,7 +296,7 @@ const weatherConsole = {
     }
 }
 
-const sunController = {
+const rayController = {
     sun: document.querySelector('#sun'),
     rays: [],
     diagonal: Math.sqrt(Math.pow((window.innerHeight * 3), 2) + Math.pow((window.innerWidth * .5), 2)),
@@ -307,7 +307,7 @@ const sunController = {
         // const minAngle = ((Math.atan((window.innerWidth) / (window.innerHeight * 2)) * 180) / Math.PI) - 10;
         let currentAngle = angle * -1;
 
-        const rayCount = 20;
+        const rayCount = isMobile ? 15 : 20;
         for (let i = 0; i < rayCount; i++) {
             const rayElement = document.createElement('div');
             rayElement.classList.add('ray');
@@ -324,16 +324,20 @@ const sunController = {
         }
 
         this.alternateRayArray = [...this.rays];
+        this.minRayCount = isMobile ? this.rays.length / 4 : this.rays.length / 2;
     },
 
     shining: false,
     rayStart(delay) {
+        document.querySelector('#displayFilter').classList.add('sunShine');
         this.shining = true;
         this.sun.classList.add('rotateReset');
 
         for (let ray of this.rays) {
-            if (getRandomInt(0, 2)) {
+            const rayChance = isMobile ? getRandomInt(-1, 1) : getRandomInt(0, 1);
+            if (rayChance > 0) {
                 this.randomizeRay(ray);
+                this.activeRayCount++;
             }
         }
 
@@ -360,6 +364,8 @@ const sunController = {
     },
 
     alternateRayArray: [],
+    activeRayCount: 0,
+    minRayCount: 0,
     alternateRays(delay) {
         if (!this.shining) {
             return;
@@ -367,10 +373,12 @@ const sunController = {
 
         if (this.alternateRayArray.length > 0) {
             const chosenRay = this.alternateRayArray.splice(getRandomInt(0, this.alternateRayArray.length - 1), 1);
-            if (chosenRay[0].style.opacity != 0) {
+            if (chosenRay[0].style.opacity != 0 && this.activeRayCount > this.minRayCount) {
                 chosenRay[0].style.opacity = 0;
-            } else {
+                this.activeRayCount--;
+            } else if (chosenRay[0].style.opacity == 0) {
                 this.randomizeRay(chosenRay[0]);
+                this.activeRayCount++;
             }
 
             setTimeout(() => {
@@ -387,7 +395,8 @@ const sunController = {
     },
 
     randomizeRay(ray) {
-        ray.style.height = `${this.diagonal * (getRandomInt(7, 10) * .1)}px`;
+        const heightModifier = isMobile ? getRandomInt(95, 115) * .01 : getRandomInt(75, 110) * .01;
+        ray.style.height = `${this.diagonal * heightModifier}px`;
         ray.style.opacity = `${getRandomInt(5, 8) * .1}`;
     }
 }
