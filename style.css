@@ -39,18 +39,16 @@ body {
 
 #sun {
     position: absolute;
-    border-radius: 100%;
-    height: 200px;
-    width: 200px;
-    background-color: gold;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
     z-index: 10000;
-    top: -100%;
-    right: -100%;
-    opacity: 0%;
+    top: -200%;
+    right: 50%;
 }
 
 #sun.rotateReset {
-    animation-name: rotateReset;
+    /* animation-name: rotateReset; */
     animation-duration: 200s;
     animation-iteration-count: infinite;
     animation-timing-function: linear;
@@ -58,7 +56,7 @@ body {
 }
 
 @keyframes rotateReset {
-    0% {transform: rotateZ(0deg); opacity: 0%;}
+    0% {transform: rotateZ(-10deg); opacity: 0%;}
     5% {opacity: 100%;}
     95% {opacity: 100%;}
     100% {transform: rotateZ(15deg); opacity: 0%;}
@@ -69,17 +67,12 @@ body {
     background-size: 100% 100%;
     background-position: 0px 0px,0px 0px;
     background: -webkit-linear-gradient(top, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 30%, rgba(255,255,255,0) 100%); 
-    background: linear-gradient(top, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 30%, rgba(255,255,255,0) 100%); 
-    top: 50%;
+    background: linear-gradient(top, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 30%, rgba(255,255,255,0) 100%);
     transform-origin: top;
     opacity: 0;
     transform: rotate(45deg);
     transition-duration: 3s;
     transition-timing-function: ease-in-out;
-}
-
-.shining {
-    opacity: .35;
 }
 
 .consoleWrapper {

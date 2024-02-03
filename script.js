@@ -1,6 +1,6 @@
 let isMobile;
 const defaultCellSize = 130;
-const testVersion = '1.3';
+const testVersion = '1.4';
 
 function initializePage() {
     const consoleWrapper = document.querySelector('.consoleWrapper');
@@ -115,7 +115,7 @@ const weatherConsole = {
         }
 
         // testing
-        sunController.rayStart(1000);
+        sunController.rayStart(500);
 
         this.swapScreen('weatherDisplay');
         pillarArray.changePillarGlyphs(this.weatherData.icon);
@@ -291,7 +291,7 @@ const weatherConsole = {
         this.consoleInput.classList.remove('blurOut');
         this.inputEnabled = true;
 
-        await new Promise(res => setTimeout(res, 500));
+        await new Promise(res => setTimeout(res, 1000));
         pillarArray.raiseButton('searchGlyph');
     }
 }
@@ -299,13 +299,13 @@ const weatherConsole = {
 const sunController = {
     sun: document.querySelector('#sun'),
     rays: [],
+    diagonal: Math.sqrt(Math.pow((window.innerHeight * 3), 2) + Math.pow((window.innerWidth * .5), 2)),
     initializeSun() {
-        const diagonal = Math.sqrt(Math.pow((window.innerHeight * 2), 2) + Math.pow((window.innerWidth * 1.5), 2));
-        let maxAngle = ((Math.atan((window.innerWidth * 2) / window.innerHeight) * 180) / Math.PI);
-        const minAngle = ((Math.atan((window.innerWidth) / (window.innerHeight * 2)) * 180) / Math.PI) - 10;
-        let currentAngle = minAngle;
-
-        const scaleModifier = (window.innerWidth / 1920);
+        const angle = ((Math.atan((window.innerWidth * .5) / (window.innerHeight * 2)) * 180) / Math.PI);
+        
+        // let maxAngle = ((Math.atan((window.innerWidth * 2) / window.innerHeight) * 180) / Math.PI);
+        // const minAngle = ((Math.atan((window.innerWidth) / (window.innerHeight * 2)) * 180) / Math.PI) - 10;
+        let currentAngle = angle * -1;
 
         const rayCount = 20;
         for (let i = 0; i < rayCount; i++) {
@@ -316,11 +316,11 @@ const sunController = {
         }
 
         for (let ray of this.rays) {
-            ray.style.height = `${diagonal * (getRandomInt(8, 11) * .1)}px`;
-            ray.style.width = `${70 * scaleModifier * (getRandomInt(6, 10) * .1)}px`;
+            const rayWidth = isMobile ? 15 : 50;
+            ray.style.width = `${rayWidth * (getRandomInt(5, 10) * .1)}px`;
             ray.style.transform = `rotate(${currentAngle}deg)`;
 
-            currentAngle += (maxAngle - minAngle) / this.rays.length;
+            currentAngle += (angle * 2) / this.rays.length;
         }
 
         this.alternateRayArray = [...this.rays];
@@ -333,7 +333,7 @@ const sunController = {
 
         for (let ray of this.rays) {
             if (getRandomInt(0, 2)) {
-                ray.style.opacity = `${getRandomInt(3, 5) * .1}`;
+                this.randomizeRay(ray);
             }
         }
 
@@ -370,7 +370,7 @@ const sunController = {
             if (chosenRay[0].style.opacity != 0) {
                 chosenRay[0].style.opacity = 0;
             } else {
-                chosenRay[0].style.opacity = getRandomInt(3, 5) * .1;
+                this.randomizeRay(chosenRay[0]);
             }
 
             setTimeout(() => {
@@ -384,6 +384,11 @@ const sunController = {
         setTimeout(() => {
             this.alternateRays(delay);
         }, delay);
+    },
+
+    randomizeRay(ray) {
+        ray.style.height = `${this.diagonal * (getRandomInt(7, 10) * .1)}px`;
+        ray.style.opacity = `${getRandomInt(5, 8) * .1}`;
     }
 }
 
@@ -900,7 +905,7 @@ const pillarArray = {
     async enableRefresh() {
         this.refreshEnabled = true;
 
-        await new Promise(res => setTimeout(res, 1000));
+        await new Promise(res => setTimeout(res, 1500));
         this.raiseButton('refreshGlyph');
     },
 
