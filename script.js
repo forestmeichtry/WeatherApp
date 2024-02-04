@@ -1,6 +1,6 @@
 let isMobile;
 const defaultCellSize = 130;
-const testVersion = '1.5';
+const testVersion = '1.6';
 
 function initializePage() {
     const consoleWrapper = document.querySelector('.consoleWrapper');
@@ -262,10 +262,13 @@ const weatherConsole = {
         if (!isMobile) {
             await new Promise(res => setTimeout(res, 500));
             this.changeCircuitState('pulsing');
-        }
 
-        await new Promise(res => setTimeout(res, 2500));
-        consoleElement.classList.add('raised');
+            await new Promise(res => setTimeout(res, 2500));
+            consoleElement.classList.add('raised');
+        } else {
+            await new Promise(res => setTimeout(res, 600));
+            consoleElement.classList.add('raised');
+        }
 
         await new Promise(res => setTimeout(res, 300));
         consoleElement.classList.remove('collapsed');
@@ -397,7 +400,8 @@ const rayController = {
     },
 
     randomizeRay(ray) {
-        const heightModifier = isMobile ? getRandomInt(95, 115) * .01 : getRandomInt(75, 110) * .01;
+        // adjust these values tomorrow
+        const heightModifier = isMobile ? getRandomInt(100, 115) * .01 : getRandomInt(85, 115) * .01;
         ray.style.height = `${this.diagonal * heightModifier}px`;
         ray.style.opacity = `${getRandomInt(5, 8) * .1}`;
     }

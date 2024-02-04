@@ -39,7 +39,7 @@ body {
 
 #displayFilter.sunShine {
     background: rgb(255,255,255);
-    background: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 100%);
+    background: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 100%);
 }
 #displayFilter.hidden {
     opacity: 0;
@@ -57,7 +57,7 @@ body {
 }
 
 #sun.rotateReset {
-    animation-name: rotateReset;
+    /* animation-name: rotateReset; */
     animation-duration: 200s;
     animation-iteration-count: infinite;
     animation-timing-function: linear;
@@ -914,4 +914,14 @@ body {
     border-top: 3px var(--color_midnightGreen) solid;
     z-index: 99999;
     pointer-events: none;
+}
+
+@media (width <= 770px),
+(height < 770px) {
+    .consoleScreen,
+    .consolePanel {
+        transition-property: margin-top;
+        transition-duration: none;
+        margin-top: -4%;
+    }
 }
