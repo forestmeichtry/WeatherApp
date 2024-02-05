@@ -1,22 +1,26 @@
 let isMobile;
 const defaultCellSize = 130;
-const testVersion = '1.6';
+const testVersion = '1.7';
+const screenWidth = window.screen.width;
+const screenHeight = window.screen.height;
+const innerWidth = window.innerWidth;
+const innerHeight = window.innerHeight;
 
 function initializePage() {
     const consoleWrapper = document.querySelector('.consoleWrapper');
-    const consoleScale = Math.min(window.screen.width / 700, 1)
+    const consoleScale = Math.min(screenWidth / 700, 1)
     consoleWrapper.style.transform = `scale(${consoleScale})`;
 
     const roundButton = document.querySelector('.roundButtonContainer');
     roundButton.style.top = `${consoleScale * 470 - 10}px`;
 
-    isMobile = Math.min(window.screen.width, window.screen.height) < 770;
+    isMobile = Math.min(screenWidth, screenHeight) < 770;
 
     if (isMobile) {
         consoleWrapper.style.top = `-100px`;
         document.querySelector('.scanlines').classList.add('mobile');
         roundButton.style.transform = `scale(.75)`;
-        roundButton.style.top = `${(window.screen.width / 700) * 470 - 40}px`;
+        roundButton.style.top = `${(screenWidth / 700) * 470 - 40}px`;
         
         const mobileInput = document.createElement('input');
         mobileInput.classList.add('mobileInput', 'blurOut');
@@ -108,14 +112,34 @@ const weatherConsole = {
         });
     },
 
+    displayFilter: document.querySelector('#displayFilter'),
+    changeDisplayFilter(setting) {
+        if (setting != 'hidden') {
+            this.displayFilter.classList.remove('night', 'sunShine');
+            this.displayFilter.classList.add(setting);
+            this.displayFilter.classList.remove('hidden');
+        } else {
+            this.displayFilter.classList.add('hidden');
+        }
+    },
+
     setWeatherEffects(code) {
-        if (this.weatherData.windSpeed > 12 && !isMobile) {
-            windController.toggleActiveWind();
-            windController.createWindgroup(this.weatherData.windDegree);
+        if (!this.weatherData.isDay) {
+            this.changeDisplayFilter('night');
+        } else if ([1006, 1009, 1030, 1135, 1147, 1186, 1189, 1192, 1195, 1201, 1207, 1243, 1246, 1252, 1276].includes(code)) {
+            this.changeDisplayFilter('overcast');
+        } else {
+            this.changeDisplayFilter('sunShine');
         }
 
-        // testing
-        rayController.rayStart(700);
+        if (this.weatherData.windSpeed > 10 && !isMobile) {
+            windController.toggleActiveWind();
+            windController.createWindgroup(this.weatherData.windDegree);
+        } else if ((code === 1000 || code === 1003) && this.weatherData.isDay) {
+            rayController.rayStart(700);
+        } else if ([1063, 1069, 1072, 1150, 1153, 1168, 1171, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1204, 1207, 1240, 1243, 1246, 1249, 1252].includes(code)) {
+            this.makeRain();
+        }
 
         this.swapScreen('weatherDisplay');
         pillarArray.changePillarGlyphs(this.weatherData.icon);
@@ -127,9 +151,10 @@ const weatherConsole = {
     disableWeatherEffects() {
         pillarArray.refreshEnabled = false;
         pillarArray.wobbling = false;
+        this.raining = false;
         windController.toggleActiveWind(false);
         rayController.rayEnd();
-        document.querySelector('#displayFilter').classList.add('hidden');
+        this.changeDisplayFilter('hidden');
     },
 
     circuitMutable: true,
@@ -297,18 +322,42 @@ const weatherConsole = {
 
         await new Promise(res => setTimeout(res, 1000));
         pillarArray.raiseButton('searchGlyph');
+    },
+
+    raining: false,
+    rainFrequency: (1920 / innerWidth) * 20,
+    rainSpeed: (innerHeight / 1080) * .7,
+    async makeRain() {
+        this.raining = true;
+        const body = document.querySelector('body');
+        
+        while (this.raining) {
+            const drop = document.createElement('div');
+            drop.classList.add('drop');
+            drop.style.left = `${getRandomInt(0, innerWidth)}px`;
+            const fallDistance = getRandomInt(20, 100);
+            drop.style.animationDuration = `${fallDistance / 100 * this.rainSpeed}s`;
+            drop.style.top = `${fallDistance}%`;
+            body.appendChild(drop);
+
+            drop.addEventListener('animationend', () => {
+                drop.remove();
+            });
+
+            await new Promise(res => setTimeout(res, this.rainFrequency));
+        }
     }
 }
 
 const rayController = {
     sun: document.querySelector('#sun'),
     rays: [],
-    diagonal: Math.sqrt(Math.pow((window.innerHeight * 3), 2) + Math.pow((window.innerWidth * .5), 2)),
+    diagonal: Math.sqrt(Math.pow((innerHeight * 3), 2) + Math.pow((innerWidth * .5), 2)),
     initializeSun() {
-        const angle = ((Math.atan((window.innerWidth * .5) / (window.innerHeight * 2)) * 180) / Math.PI) + 10;
+        const angle = ((Math.atan((innerWidth * .5) / (innerHeight * 2)) * 180) / Math.PI);
         
-        // let maxAngle = ((Math.atan((window.innerWidth * 2) / window.innerHeight) * 180) / Math.PI);
-        // const minAngle = ((Math.atan((window.innerWidth) / (window.innerHeight * 2)) * 180) / Math.PI) - 10;
+        // let maxAngle = ((Math.atan((innerWidth * 2) / innerHeight) * 180) / Math.PI);
+        // const minAngle = ((Math.atan((innerWidth) / (innerHeight * 2)) * 180) / Math.PI) - 10;
         let currentAngle = angle * -1;
 
         const rayCount = isMobile ? 15 : 20;
@@ -333,8 +382,6 @@ const rayController = {
 
     shining: false,
     rayStart(delay) {
-        document.querySelector('#displayFilter').classList.remove('hidden');
-        document.querySelector('#displayFilter').classList.add('sunShine');
         this.shining = true;
         this.sun.classList.add('rotateReset');
 
@@ -429,26 +476,26 @@ const windController = {
         windStyle.windAngle = windAngle;
         windStyle.lineVariant = getRandomInt(1, 3);
         const windGroupSize = getRandomInt(3, 6);
-        windStyle.duration = ((Math.sqrt(Math.pow(window.screen.width, 2) + Math.pow(window.screen.height, 2)) + 400) / 4000) * 15000;
+        windStyle.duration = ((Math.sqrt(Math.pow(screenWidth, 2) + Math.pow(screenHeight, 2)) + 400) / 4000) * 15000;
 
         if (windAngle === 0 || windAngle === 360) {
-            windStyle.left = getRandomInt(-100, window.innerWidth);
+            windStyle.left = getRandomInt(-100, innerWidth);
             windStyle.leftAfter = 0;
             windStyle.bottom = -200;
             windStyle.bottomAfter = 3800;
             windStyle.swapSides = true;
         } else if (windAngle === 90) {
-            windStyle.bottom = getRandomInt(-100, window.innerHeight);
+            windStyle.bottom = getRandomInt(-100, innerHeight);
             windStyle.bottomAfter = 0;
             windStyle.left = -200;
             windStyle.leftAfter = 3800;
         } else if (windAngle === 180) {
-            windStyle.left = getRandomInt(-100, window.innerWidth);
+            windStyle.left = getRandomInt(-100, innerWidth);
             windStyle.leftAfter = 0;
             windStyle.top = -200;
             windStyle.topAfter = 3800;
         } else if (windAngle === 270) {
-            windStyle.bottom = getRandomInt(-100, window.innerHeight);
+            windStyle.bottom = getRandomInt(-100, innerHeight);
             windStyle.bottomAfter = 0;
             windStyle.right = -200;
             windStyle.rightAfter = 3800;
@@ -481,15 +528,15 @@ const windController = {
                 subsectionAngle = 90 - (windAngle % 90);
             }
 
-            let subsection = (((Math.tan(subsectionAngle * (Math.PI / 180))) * window.innerHeight) * window.innerHeight) / 2;
-            let ratio = subsection / (window.innerHeight * window.innerWidth);
+            let subsection = (((Math.tan(subsectionAngle * (Math.PI / 180))) * innerHeight) * innerHeight) / 2;
+            let ratio = subsection / (innerHeight * innerWidth);
             if (ratio > .5) {
-                subsection = (((Math.tan((90 - subsectionAngle) * (Math.PI / 180))) * window.innerWidth) * window.innerWidth) / 2;
-                ratio = 1 - (subsection / (window.innerHeight * window.innerWidth));
+                subsection = (((Math.tan((90 - subsectionAngle) * (Math.PI / 180))) * innerWidth) * innerWidth) / 2;
+                ratio = 1 - (subsection / (innerHeight * innerWidth));
             }
 
             if (getRandomInt(1, 1000) < ratio * 1000) {
-                let yPosition = getRandomInt(-200, window.innerHeight - 200);
+                let yPosition = getRandomInt(-200, innerHeight - 200);
                 let validity = false;
                 if (this.pastCoordinates.length > 0 && !isMobile) {
                     while (!validity) {
@@ -501,7 +548,7 @@ const windController = {
                         }
 
                         if (!validity) {
-                            yPosition = getRandomInt(-200, window.innerHeight - 200);
+                            yPosition = getRandomInt(-200, innerHeight - 200);
                         }
                     }
                 }
@@ -515,7 +562,7 @@ const windController = {
                 windStyle[`${directionOne}After`] = windStyle.swapSides ? sideTwo  : sideOne;
                 windStyle[`${directionTwo}After`] = windStyle.swapSides ? sideOne  : sideTwo;
             } else {
-                let xPosition = getRandomInt(-200, window.innerWidth);
+                let xPosition = getRandomInt(-200, innerWidth);
                 let validity = false;
                 if (this.pastCoordinates.length > 0 && !isMobile) {
                     while (!validity) {
@@ -527,7 +574,7 @@ const windController = {
                         }
 
                         if (!validity) {
-                            xPosition = getRandomInt(-200, window.innerHeight);
+                            xPosition = getRandomInt(-200, innerHeight);
                         }
                     }
                 }
@@ -633,10 +680,10 @@ const pillarArray = {
 
         const backgroundLayer = document.querySelector('.backgroundLayer');
         backgroundLayer.style['margin-top'] = `${60 * (cellSize / defaultCellSize)}px`;
-        this.columns = Math.floor((window.innerWidth) / cellSize);
+        this.columns = Math.floor((innerWidth) / cellSize);
         this.columns = this.columns % 2 == 0 ? this.columns : this.columns + 1;
         backgroundLayer.style['gridTemplateColumns'] = `repeat(${this.columns}, ${cellSize}px)`;
-        this.rows = Math.floor((window.innerHeight) / cellSize);
+        this.rows = Math.floor((innerHeight) / cellSize);
         backgroundLayer.style['gridTemplateRows'] = `repeat(${this.rows}, ${cellSize}px)`;
         let pillarNum = this.columns * this.rows;
         let rowIndex = 0;
