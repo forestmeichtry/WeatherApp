@@ -8,7 +8,7 @@ const innerHeight = window.innerHeight;
 
 function initializePage() {
     const consoleWrapper = document.querySelector('.consoleWrapper');
-    const consoleScale = Math.min(screenWidth / 700, 1)
+    const consoleScale = Math.min(screenWidth / 700, 1);
     consoleWrapper.style.transform = `scale(${consoleScale})`;
 
     const roundButton = document.querySelector('.roundButtonContainer');
@@ -55,7 +55,7 @@ const weatherConsole = {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Backspace' && this.consoleInput.textContent.length > 0 && this.inputEnabled && !isMobile) {
                 this.consoleInput.textContent = this.consoleInput.textContent.substring(0, this.consoleInput.textContent.length - 1);
-            } else if (/[A-Za-z\s,]+/.test(e.key) && e.key.length === 1 && this.inputEnabled && !isMobile) {
+            } else if (/[A-Za-z0-9\s,]+/.test(e.key) && e.key.length === 1 && this.inputEnabled && !isMobile) {
                 this.consoleInput.textContent += e.key;
             } else if (e.key === 'Enter') {
                 pillarArray.click();
@@ -69,6 +69,28 @@ const weatherConsole = {
         this.displayText('Searching', 'searching');
         // this.changeCircuitState('glowing');
         const location = isMobile ? this.consoleInput.value : this.consoleInput.textContent;
+
+        //For testing purposes, allow forced weather effect with associated with code
+        if (typeof (location - 0) === 'number' && !isNaN(location - 0)) {
+            this.weatherData = {
+                condition: 'testCondtion',
+                icon: '',
+                code: location- 0,
+                temp: 'testTemp',
+                windSpeed: '10',
+                windDirection: 'N',
+                windDegree: "0",
+                location: 'Test Location',
+                region: 'Testria',
+                country: 'Testria',
+                isDay: true
+            }
+            console.log(this.weatherData)
+
+            this.setWeatherEffects(this.weatherData.code);
+            return;
+        }
+
         const url = `https://api.weatherapi.com/v1/current.json?key=68c11438bfb24241860201215232610&q=${location}`;
         const weatherPromise = fetch(url, {mode: 'cors'});
         weatherPromise.then(async (response) => {
@@ -95,7 +117,6 @@ const weatherConsole = {
             }
 
             this.setWeatherEffects(this.weatherData.code);
-            
         })
         .catch((error) => {
             console.log(error.message);
