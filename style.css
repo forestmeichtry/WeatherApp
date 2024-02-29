@@ -54,6 +54,23 @@ body {
     100% {opacity: 0;}
 }
 
+#cloudLayer {
+    position: absolute;
+    background-image: url(Assets/cloudShadow.svg);
+    background-size: 100%;
+    background-position: center;
+    height: 200%;
+    width: 200%;
+    opacity: 12%;
+    z-index: 99;
+    filter: blur(4px);
+    transition-duration: 4s;
+}
+
+#cloudLayer.hidden {
+    opacity: 0%;
+}
+
 #displayFilter {
     position: absolute;
     height: 100%;
@@ -70,7 +87,7 @@ body {
 }
 
 #displayFilter.overcast {
-    background: rgba(0, 0, 0, .15);
+    background-color: rgba(0, 0, 0, .1);
 }
 
 #displayFilter.night {
@@ -79,6 +96,10 @@ body {
 
 #displayFilter.hidden {
     opacity: 0;
+}
+
+#displayFilter.fog {
+    background: rgba(255,255,255,.3);
 }
 
 #sun {
@@ -93,18 +114,10 @@ body {
 }
 
 #sun.rotateReset {
-    /* animation-name: rotateReset; */
     animation-duration: 200s;
     animation-iteration-count: infinite;
     animation-timing-function: linear;
     animation-fill-mode: forwards;
-}
-
-@keyframes rotateReset {
-    0% {transform: rotateZ(-10deg); opacity: 0%;}
-    5% {opacity: 100%;}
-    95% {opacity: 100%;}
-    100% {transform: rotateZ(15deg); opacity: 0%;}
 }
 
 .ray {

@@ -47,6 +47,7 @@ function initializePage() {
 const weatherConsole = {
     activeScreen: document.querySelector('.contentOne'),
     inactiveScreen: document.querySelector('.contentTwo'),
+    cloudLayer: document.querySelector('#cloudLayer'),
     inputEnabled: false,
     weatherData: {},
     
@@ -75,11 +76,11 @@ const weatherConsole = {
             this.weatherData = {
                 condition: 'testCondtion',
                 icon: '',
-                code: location- 0,
+                code: location - 0,
                 temp: 'testTemp',
                 windSpeed: '10',
                 windDirection: 'N',
-                windDegree: "0",
+                windDegree: 70,
                 location: 'Test Location',
                 region: 'Testria',
                 country: 'Testria',
@@ -136,7 +137,7 @@ const weatherConsole = {
     displayFilter: document.querySelector('#displayFilter'),
     changeDisplayFilter(setting) {
         if (setting != 'hidden') {
-            this.displayFilter.classList.remove('night', 'sunShine');
+            this.displayFilter.classList.remove('night', 'sunShine', 'overcast', 'fog', 'cloudy');
             this.displayFilter.classList.add(setting);
             this.displayFilter.classList.remove('hidden');
         } else {
@@ -145,7 +146,9 @@ const weatherConsole = {
     },
 
     setWeatherEffects(code) {
-        if (!this.weatherData.isDay) {
+        if ([1030, 1135, 1147].includes(code)) {
+            this.changeDisplayFilter('fog');
+        } else if (!this.weatherData.isDay) {
             this.changeDisplayFilter('night');
         } else if ([1006, 1009, 1030, 1135, 1147, 1186, 1189, 1192, 1195, 1201, 1207, 1243, 1246, 1252, 1276].includes(code)) {
             this.changeDisplayFilter('overcast');
@@ -156,10 +159,12 @@ const weatherConsole = {
         if (this.weatherData.windSpeed > 10 && !isMobile) {
             windController.toggleActiveWind();
             windController.createWindgroup(this.weatherData.windDegree);
-        } else if ((code === 1000 || code === 1003) && this.weatherData.isDay) {
+        } else if ((code === 1000, code === 1003) && this.weatherData.isDay) {
             rayController.rayStart(700);
         } else if ([1063, 1069, 1072, 1150, 1153, 1168, 1171, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1204, 1207, 1240, 1243, 1246, 1249, 1252].includes(code)) {
             this.makeRain();
+        } else if (code === 1006) {
+            this.cloudLayer.classList.remove('hidden');
         }
 
         this.swapScreen('weatherDisplay');
@@ -174,6 +179,7 @@ const weatherConsole = {
         pillarArray.wobbling = false;
         this.raining = false;
         windController.toggleActiveWind(false);
+        this.cloudLayer.classList.add('hidden');
         rayController.rayEnd();
         this.changeDisplayFilter('hidden');
     },
@@ -487,7 +493,7 @@ const windController = {
 
     // Creates a random group of wind lines moving in the given direction
     pastCoordinates: [],
-    createWindgroup(windAngle, delay = 4000) {
+    createWindgroup(windAngle, delay = 6000) {
         if (!this.activeWind) {
             return;
         }
