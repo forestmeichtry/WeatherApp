@@ -1,6 +1,6 @@
 let isMobile;
 const defaultCellSize = 130;
-const testVersion = '1.7';
+const testVersion = '1.8';
 const screenWidth = window.screen.width;
 const screenHeight = window.screen.height;
 const innerWidth = window.innerWidth;
@@ -146,8 +146,8 @@ const weatherConsole = {
     },
 
     setWeatherEffects(code) {
-        if ([1030, 1135, 1147].includes(code)) {
-            this.changeDisplayFilter('fog');
+        if ([1030, 1114, 1117, 1135, 1147, 1210, 1213, 1216, 1219, 1222, 1225, 1255, 1258].includes(code)) {
+            this.changeDisplayFilter('haze');
         } else if (!this.weatherData.isDay) {
             this.changeDisplayFilter('night');
         } else if ([1006, 1009, 1030, 1135, 1147, 1186, 1189, 1192, 1195, 1201, 1207, 1243, 1246, 1252, 1276].includes(code)) {
@@ -159,10 +159,12 @@ const weatherConsole = {
         if (this.weatherData.windSpeed > 10 && !isMobile) {
             windController.toggleActiveWind();
             windController.createWindgroup(this.weatherData.windDegree);
-        } else if ((code === 1000, code === 1003) && this.weatherData.isDay) {
+        } else if ((code === 1000 || code === 1003) && this.weatherData.isDay) {
             rayController.rayStart(700);
         } else if ([1063, 1069, 1072, 1150, 1153, 1168, 1171, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1204, 1207, 1240, 1243, 1246, 1249, 1252].includes(code)) {
-            this.makeRain();
+            this.makeRainSnow('rain');
+        } else if ([1114, 1117, 1210, 1213, 1216, 1219, 1222, 1225, 1255, 1258].includes(code)) {
+            this.makeRainSnow('snow');
         } else if (code === 1006) {
             this.cloudLayer.classList.remove('hidden');
         }
@@ -177,7 +179,7 @@ const weatherConsole = {
     disableWeatherEffects() {
         pillarArray.refreshEnabled = false;
         pillarArray.wobbling = false;
-        this.raining = false;
+        this.activeParticles = false;
         windController.toggleActiveWind(false);
         this.cloudLayer.classList.add('hidden');
         rayController.rayEnd();
@@ -351,27 +353,31 @@ const weatherConsole = {
         pillarArray.raiseButton('searchGlyph');
     },
 
-    raining: false,
-    rainFrequency: (1920 / innerWidth) * 20,
-    rainSpeed: (innerHeight / 1080) * .7,
-    async makeRain() {
-        this.raining = true;
+    activeParticles: false,
+    dropFrequency: (1920 / innerWidth) * 20,
+    snowFrequency: (1920 / innerWidth) * 150,
+    dropSpeed: (innerHeight / 1080) * .7,
+    snowSpeed: (innerHeight / 1080) * 8,
+    async makeRainSnow(particleType) {
+        this.activeParticles = true;
         const body = document.querySelector('body');
+        const particleFrequency = particleType === 'rain' ? this.dropFrequency : this.snowFrequency;
+        const particleSpeed = particleType === 'rain' ? this.dropSpeed : this.snowSpeed;
         
-        while (this.raining) {
-            const drop = document.createElement('div');
-            drop.classList.add('drop');
-            drop.style.left = `${getRandomInt(0, innerWidth)}px`;
-            const fallDistance = getRandomInt(20, 100);
-            drop.style.animationDuration = `${fallDistance / 100 * this.rainSpeed}s`;
-            drop.style.top = `${fallDistance}%`;
-            body.appendChild(drop);
+        while (this.activeParticles) {
+            const particle = document.createElement('div');
+            particle.classList.add(particleType);
+            particle.style.left = `${getRandomInt(0, innerWidth)}px`;
+            const fallDistance = particleType === 'rain' ? getRandomInt(20, 100) : getRandomInt(80, 110);
+            particle.style.animationDuration = `${fallDistance / 100 * particleSpeed}s`;
+            particle.style.top = `${fallDistance}%`;
+            body.appendChild(particle);
 
-            drop.addEventListener('animationend', () => {
-                drop.remove();
+            particle.addEventListener('animationend', () => {
+                particle.remove();
             });
 
-            await new Promise(res => setTimeout(res, this.rainFrequency));
+            await new Promise(res => setTimeout(res, particleFrequency));
         }
     }
 }
@@ -1030,3 +1036,19 @@ function getRandomInt(min, max) {
 }
 
 initializePage();
+
+const snowLayer = document.querySelector('#snowLayer');
+function createSnow(delay) {
+    const particle = document.createElement('div');
+    particle.classList.add('snowParticle');
+    particle.style.left = `${getRandomInt(0, window.innerWidth)}px`;
+    snowLayer.appendChild(particle);
+
+    particle.addEventListener('animationend', () => {
+        particle.remove();
+    });
+
+    setTimeout(() => {
+        createSnow(delay);
+    }, delay);
+}

@@ -27,28 +27,30 @@ body {
     pointer-events: none;
 }
 
-.rainDiv {
-    left: 0;
-    top: 0;
-    position: absolute;
-    height: 800px;
-    width: 800px;
-    border: 4px solid black;
-    z-index: 99;
-}
-
-.drop {
+.rain {
     position: absolute;
     top: 80%;
     width: 3px;
     height: 60px;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.25));
-    animation-name: fallingDrop;
+    animation-name: fallingParticle;
     animation-timing-function: ease-in;
     z-index: 99;
 }
 
-@keyframes fallingDrop {
+.snow {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 4px;
+    background-color: var(--color_nyanza);
+    transform: rotateZ(0deg);
+    animation-name: fallingParticle;
+    animation-timing-function: linear;
+    z-index: 9999;
+}
+
+@keyframes fallingParticle {
     0% {top: -10%; opacity: 1;}
     90% {opacity: 1;}
     100% {opacity: 0;}
@@ -98,8 +100,8 @@ body {
     opacity: 0;
 }
 
-#displayFilter.fog {
-    background: rgba(255,255,255,.3);
+#displayFilter.haze {
+    background: rgba(255,255,255,.2);
 }
 
 #sun {
