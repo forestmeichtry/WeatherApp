@@ -1,6 +1,6 @@
 let isMobile;
 const defaultCellSize = 130;
-const testVersion = '1.8';
+const testVersion = '1.9';
 const screenWidth = window.screen.width;
 const screenHeight = window.screen.height;
 const innerWidth = window.innerWidth;
@@ -150,23 +150,27 @@ const weatherConsole = {
             this.changeDisplayFilter('haze');
         } else if (!this.weatherData.isDay) {
             this.changeDisplayFilter('night');
-        } else if ([1006, 1009, 1030, 1135, 1147, 1186, 1189, 1192, 1195, 1201, 1207, 1243, 1246, 1252, 1276].includes(code)) {
+        } else if ([1006, 1009, 1030, 1135, 1147, 1186, 1189, 1192, 1195, 1201, 1207, 1243, 1246, 1252, 1276, 1282].includes(code)) {
             this.changeDisplayFilter('overcast');
         } else {
             this.changeDisplayFilter('sunShine');
         }
 
-        if (this.weatherData.windSpeed > 10 && !isMobile) {
+        if ([1063, 1069, 1072, 1150, 1153, 1168, 1171, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1204, 1207, 1240, 1243, 1246, 1249, 1252, 1273, 1276].includes(code)) {
+            this.makeRainSnow('rain');
+        } else if ([1114, 1117, 1210, 1213, 1216, 1219, 1222, 1225, 1255, 1258, 1279, 1282].includes(code)) {
+            this.makeRainSnow('snow');
+        } else if (this.weatherData.windSpeed > 10 && !isMobile) {
             windController.toggleActiveWind();
             windController.createWindgroup(this.weatherData.windDegree);
         } else if ((code === 1000 || code === 1003) && this.weatherData.isDay) {
-            rayController.rayStart(700);
-        } else if ([1063, 1069, 1072, 1150, 1153, 1168, 1171, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1204, 1207, 1240, 1243, 1246, 1249, 1252].includes(code)) {
-            this.makeRainSnow('rain');
-        } else if ([1114, 1117, 1210, 1213, 1216, 1219, 1222, 1225, 1255, 1258].includes(code)) {
-            this.makeRainSnow('snow');
+            rayController.rayStart(400);
         } else if (code === 1006) {
             this.cloudLayer.classList.remove('hidden');
+        }
+        
+        if ([1087, 1273, 1276, 1279, 1282].includes(code)) {
+            this.setFlashState(true);
         }
 
         this.swapScreen('weatherDisplay');
@@ -180,6 +184,7 @@ const weatherConsole = {
         pillarArray.refreshEnabled = false;
         pillarArray.wobbling = false;
         this.activeParticles = false;
+        this.setFlashState(false);
         windController.toggleActiveWind(false);
         this.cloudLayer.classList.add('hidden');
         rayController.rayEnd();
@@ -355,7 +360,7 @@ const weatherConsole = {
 
     activeParticles: false,
     dropFrequency: (1920 / innerWidth) * 20,
-    snowFrequency: (1920 / innerWidth) * 150,
+    snowFrequency: (1920 / innerWidth) * 200,
     dropSpeed: (innerHeight / 1080) * .7,
     snowSpeed: (innerHeight / 1080) * 8,
     async makeRainSnow(particleType) {
@@ -368,7 +373,7 @@ const weatherConsole = {
             const particle = document.createElement('div');
             particle.classList.add(particleType);
             particle.style.left = `${getRandomInt(0, innerWidth)}px`;
-            const fallDistance = particleType === 'rain' ? getRandomInt(20, 100) : getRandomInt(80, 110);
+            const fallDistance = particleType === 'rain' ? getRandomInt(20, 100) : getRandomInt(60, 110);
             particle.style.animationDuration = `${fallDistance / 100 * particleSpeed}s`;
             particle.style.top = `${fallDistance}%`;
             body.appendChild(particle);
@@ -379,7 +384,34 @@ const weatherConsole = {
 
             await new Promise(res => setTimeout(res, particleFrequency));
         }
-    }
+    },
+
+    flashing: false,
+    setFlashState(state) {
+        if (state) {
+            this.flashing = true;
+            setTimeout(() => {
+                this.lightningFlash();
+            }, 3000);
+        } else {
+            this.flashing = false;
+        }
+    },
+
+    lightningFlash() {
+        if (!this.flashing) {
+            return;
+        }
+
+        this.displayFilter.classList.add('lightningFlash');
+        this.displayFilter.addEventListener('animationend', () => {
+            this.displayFilter.classList.remove('lightningFlash');
+        });
+
+        setTimeout(() => {
+            this.lightningFlash();
+        }, getRandomInt(4000, 8000));
+    },
 }
 
 const rayController = {
@@ -1036,19 +1068,3 @@ function getRandomInt(min, max) {
 }
 
 initializePage();
-
-const snowLayer = document.querySelector('#snowLayer');
-function createSnow(delay) {
-    const particle = document.createElement('div');
-    particle.classList.add('snowParticle');
-    particle.style.left = `${getRandomInt(0, window.innerWidth)}px`;
-    snowLayer.appendChild(particle);
-
-    particle.addEventListener('animationend', () => {
-        particle.remove();
-    });
-
-    setTimeout(() => {
-        createSnow(delay);
-    }, delay);
-}

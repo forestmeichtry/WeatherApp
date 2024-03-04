@@ -83,6 +83,18 @@ body {
     color: rgba(255, 255, 255, 0);
 }
 
+#displayFilter.lightningFlash {
+    animation-name: lightningFlash;
+    animation-duration: .7s;
+    animation-timing-function: ease-out;
+}
+
+@keyframes lightningFlash {
+	30% { opacity: 0.6; background-color: rgba(255, 255, 255, .5); }
+    40% { opacity: 0.2; background-color: rgba(255, 255, 255, .5); }
+    60% { opacity: 0.9; background-color: rgba(255, 255, 255, .5); }
+}
+
 #displayFilter.sunShine {
     background: rgb(255,255,255);
     background: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 100%);
