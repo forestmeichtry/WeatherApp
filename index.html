@@ -11,52 +11,53 @@
     <title>Weather App</title>
 </head>
 <body>
+    <div id="displayFilter" class="hidden"></div>
+    <div id="cloudLayer" class="hidden"></div>
+    <div id="sun"></div>
     <div class="backgroundWrapper">
-        <div class="backgroundLayer">
+        <div class="backgroundLayer"></div>
+    </div>
+    <div class="consoleWrapper collapsed">
+        <div class="consoleTop">
+            <div class="overflowContainer top">
+                <div class="circuit circuitTop"></div>
+            </div>
         </div>
-        <div class="consoleWrapper collapsed">
-            <div class="consoleTop">
-                <div class="overflowContainer top">
-                    <div class="circuit circuitTop"></div>
-                </div>
-            </div>
-            <div class="consoleScreen">
-                <div class="circuit circuitScreen"></div>
-            </div>
-            <div class="consolePanel">
-                <div class="vignette"></div>
-                <div class="scanlines"></div>
-                <div class="consoleContent contentOne"></div>
-                <div class="consoleContent contentTwo blurOut"></div>
-                <div class="consoleInput blurOut"></div>
-            </div>
-            <div class="consoleBase">
-                <div class="overflowContainer bottom">
-                    <div class="circuit circuitBottom"></div>
-                </div>
-            </div>
-            <div class="consoleShadow"></div>
+        <div class="consoleScreen">
+            <div class="circuit circuitScreen"></div>
         </div>
-        <div class="roundButtonContainer">
-            <div class="roundChamber"></div>
-            <div class="roundDoors">
-                <div class="door" id="doorOne"></div>
-                <div class="door" id="doorTwo"></div>
+        <div class="consolePanel">
+            <div class="vignette"></div>
+            <div class="scanlines"></div>
+            <div class="consoleContent contentOne"></div>
+            <div class="consoleContent contentTwo blurOut"></div>
+        </div>
+        <div class="consoleBase">
+            <div class="overflowContainer bottom">
+                <div class="circuit circuitBottom"></div>
             </div>
-            <div class="roundBase">
-                <div class="buttonGrassOne buttonPlant"></div>
-                <div class="buttonGrassTwo buttonPlant"></div>
-                <div class="buttonGrassThree buttonPlant"></div>
-                <div class="buttonGrassFour buttonPlant"></div>
-                <div class="buttonWeedOne buttonPlant"></div>
-                <div class="buttonWeedTwo buttonPlant"></div>
-                <div class="buttonWeedThree buttonPlant"></div>
-                <div class="buttonWeedFour buttonPlant"></div>
-            </div>
-            <div class="roundBackground"></div>
-            <div class="roundButton">
-                <div class="roundFace"></div>
-            </div>
+        </div>
+        <div class="consoleShadow"></div>
+    </div>
+    <div class="roundButtonContainer">
+        <div class="roundChamber"></div>
+        <div class="roundDoors">
+            <div class="door" id="doorOne"></div>
+            <div class="door" id="doorTwo"></div>
+        </div>
+        <div class="roundBase">
+            <div class="buttonGrassOne buttonPlant"></div>
+            <div class="buttonGrassTwo buttonPlant"></div>
+            <div class="buttonGrassThree buttonPlant"></div>
+            <div class="buttonGrassFour buttonPlant"></div>
+            <div class="buttonWeedOne buttonPlant"></div>
+            <div class="buttonWeedTwo buttonPlant"></div>
+            <div class="buttonWeedThree buttonPlant"></div>
+            <div class="buttonWeedFour buttonPlant"></div>
+        </div>
+        <div class="roundBackground"></div>
+        <div class="roundButton">
+            <div class="roundFace"></div>
         </div>
     </div>
     <div class="createdBy">Created By Forest M</div>

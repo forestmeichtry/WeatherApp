@@ -1,46 +1,62 @@
 let isMobile;
 const defaultCellSize = 130;
+const testVersion = '1.9';
+const screenWidth = window.screen.width;
+const screenHeight = window.screen.height;
+const innerWidth = window.innerWidth;
+const innerHeight = window.innerHeight;
 
 function initializePage() {
     const consoleWrapper = document.querySelector('.consoleWrapper');
-    const consoleScale = Math.min(window.screen.width / 700, 1)
+    const consoleScale = Math.min(screenWidth / 700, 1);
     consoleWrapper.style.transform = `scale(${consoleScale})`;
 
     const roundButton = document.querySelector('.roundButtonContainer');
     roundButton.style.top = `${consoleScale * 470 - 10}px`;
 
-    isMobile = Math.min(window.screen.width, window.screen.height) < 770 
-        || navigator.userAgent.indexOf("Mobi") > -1;
+    isMobile = Math.min(screenWidth, screenHeight) < 770;
 
     if (isMobile) {
         consoleWrapper.style.top = `-100px`;
         document.querySelector('.scanlines').classList.add('mobile');
         roundButton.style.transform = `scale(.75)`;
-        roundButton.style.top = `${(window.screen.width / 700) * 470 - 40}px`;
+        roundButton.style.top = `${(screenWidth / 700) * 470 - 40}px`;
+        
+        const mobileInput = document.createElement('input');
+        mobileInput.classList.add('mobileInput', 'blurOut');
+        document.querySelector('.consolePanel').appendChild(mobileInput);
+        weatherConsole.consoleInput = mobileInput;
 
         pillarArray.initializeArray(70);
         weatherConsole.initializeInput();
+        rayController.initializeSun();
         return;
     }
-    
+
+    const standardInput = document.createElement('div');
+    standardInput.classList.add('consoleInput', 'blurOut');
+    document.querySelector('.consolePanel').appendChild(standardInput);
+    weatherConsole.consoleInput = standardInput;
+
     pillarArray.initializeArray();
     weatherConsole.initializeInput();
+    rayController.initializeSun();
 }
 
 // Object that controls central display element and fetches weather data
 const weatherConsole = {
     activeScreen: document.querySelector('.contentOne'),
     inactiveScreen: document.querySelector('.contentTwo'),
-    consoleInput: document.querySelector('.consoleInput'),
+    cloudLayer: document.querySelector('#cloudLayer'),
     inputEnabled: false,
     weatherData: {},
     
     // Called on page load, adds event listener for key inputs
     initializeInput() {
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && this.consoleInput.textContent.length > 0 && this.inputEnabled) {
+            if (e.key === 'Backspace' && this.consoleInput.textContent.length > 0 && this.inputEnabled && !isMobile) {
                 this.consoleInput.textContent = this.consoleInput.textContent.substring(0, this.consoleInput.textContent.length - 1);
-            } else if (/[A-Za-z\s,]+/.test(e.key) && e.key.length === 1 && this.inputEnabled) {
+            } else if (/[A-Za-z0-9\s,]+/.test(e.key) && e.key.length === 1 && this.inputEnabled && !isMobile) {
                 this.consoleInput.textContent += e.key;
             } else if (e.key === 'Enter') {
                 pillarArray.click();
@@ -53,7 +69,29 @@ const weatherConsole = {
         this.inputEnabled = false;
         this.displayText('Searching', 'searching');
         // this.changeCircuitState('glowing');
-        const location = this.consoleInput.textContent
+        const location = isMobile ? this.consoleInput.value : this.consoleInput.textContent;
+
+        //For testing purposes, allow forced weather effect with associated with code
+        if (typeof (location - 0) === 'number' && !isNaN(location - 0)) {
+            this.weatherData = {
+                condition: 'testCondtion',
+                icon: '',
+                code: location - 0,
+                temp: 'testTemp',
+                windSpeed: '10',
+                windDirection: 'N',
+                windDegree: 70,
+                location: 'Test Location',
+                region: 'Testria',
+                country: 'Testria',
+                isDay: true
+            }
+            console.log(this.weatherData)
+
+            this.setWeatherEffects(this.weatherData.code);
+            return;
+        }
+
         const url = `https://api.weatherapi.com/v1/current.json?key=68c11438bfb24241860201215232610&q=${location}`;
         const weatherPromise = fetch(url, {mode: 'cors'});
         weatherPromise.then(async (response) => {
@@ -68,22 +106,18 @@ const weatherConsole = {
             this.weatherData = {
                 condition: fetchedData.current.condition.text,
                 icon: fetchedData.current.condition.icon,
+                code: fetchedData.current.condition.code,
                 temp: fetchedData.current.temp_f,
                 windSpeed: fetchedData.current.wind_mph,
                 windDirection: fetchedData.current.wind_dir,
                 windDegree: fetchedData.current.wind_degree,
                 location: fetchedData.location.name,
                 region: fetchedData.location.region,
-                country: fetchedData.location.country
+                country: fetchedData.location.country,
+                isDay: fetchedData.current.is_day
             }
-            
-            this.swapScreen('weatherDisplay');
-            pillarArray.changePillarGlyphs(this.weatherData.icon);
-            pillarArray.wobbling = true;
-            pillarArray.wobble(300);
-            pillarArray.enableRefresh();
-            windController.toggleActiveWind();
-            windController.createWindgroup(this.weatherData.windDegree);
+
+            this.setWeatherEffects(this.weatherData.code);
         })
         .catch((error) => {
             console.log(error.message);
@@ -100,9 +134,70 @@ const weatherConsole = {
         });
     },
 
+    displayFilter: document.querySelector('#displayFilter'),
+    changeDisplayFilter(setting) {
+        if (setting != 'hidden') {
+            this.displayFilter.classList.remove('night', 'sunShine', 'overcast', 'fog', 'cloudy');
+            this.displayFilter.classList.add(setting);
+            this.displayFilter.classList.remove('hidden');
+        } else {
+            this.displayFilter.classList.add('hidden');
+        }
+    },
+
+    setWeatherEffects(code) {
+        if ([1030, 1114, 1117, 1135, 1147, 1210, 1213, 1216, 1219, 1222, 1225, 1255, 1258].includes(code)) {
+            this.changeDisplayFilter('haze');
+        } else if (!this.weatherData.isDay) {
+            this.changeDisplayFilter('night');
+        } else if ([1006, 1009, 1030, 1135, 1147, 1186, 1189, 1192, 1195, 1201, 1207, 1243, 1246, 1252, 1276, 1282].includes(code)) {
+            this.changeDisplayFilter('overcast');
+        } else {
+            this.changeDisplayFilter('sunShine');
+        }
+
+        if ([1063, 1069, 1072, 1150, 1153, 1168, 1171, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1204, 1207, 1240, 1243, 1246, 1249, 1252, 1273, 1276].includes(code)) {
+            this.makeRainSnow('rain');
+        } else if ([1114, 1117, 1210, 1213, 1216, 1219, 1222, 1225, 1255, 1258, 1279, 1282].includes(code)) {
+            this.makeRainSnow('snow');
+        } else if (this.weatherData.windSpeed > 10 && !isMobile) {
+            windController.toggleActiveWind();
+            windController.createWindgroup(this.weatherData.windDegree);
+        } else if ((code === 1000 || code === 1003) && this.weatherData.isDay) {
+            rayController.rayStart(400);
+        } else if (code === 1006) {
+            this.cloudLayer.classList.remove('hidden');
+        }
+        
+        if ([1087, 1273, 1276, 1279, 1282].includes(code)) {
+            this.setFlashState(true);
+        }
+
+        this.swapScreen('weatherDisplay');
+        pillarArray.changePillarGlyphs(this.weatherData.icon);
+        pillarArray.wobbling = true;
+        pillarArray.wobble(300);
+        pillarArray.enableRefresh();
+    },
+
+    disableWeatherEffects() {
+        pillarArray.refreshEnabled = false;
+        pillarArray.wobbling = false;
+        this.activeParticles = false;
+        this.setFlashState(false);
+        windController.toggleActiveWind(false);
+        this.cloudLayer.classList.add('hidden');
+        rayController.rayEnd();
+        this.changeDisplayFilter('hidden');
+    },
+
     circuitMutable: true,
     circuitState: 'unset',
     async changeCircuitState(state) {
+        if (isMobile) {
+            return;
+        }
+
         const circuits = document.querySelectorAll('.circuit');
         
         if (state === 'pulsing' || (state === 'autoPulse' && this.circuitState === 'pulsing')) {
@@ -139,7 +234,7 @@ const weatherConsole = {
     // The display uses two screens with only one being shown at a time.
     // New content is added to the inactive screen and then transitioned to
     async swapScreen(screenClass) {
-        document.querySelector('.consoleInput').classList.add('blurOut');
+        this.consoleInput.classList.add('blurOut');
 
         // removes old classes from inactive screen before adding new content
         for (let screenClass of this.inactiveScreen.classList) {
@@ -223,11 +318,16 @@ const weatherConsole = {
     async raiseConsole() {
         const consoleElement = document.querySelector('.consoleWrapper');
 
-        await new Promise(res => setTimeout(res, 500));
-        this.changeCircuitState('pulsing');
+        if (!isMobile) {
+            await new Promise(res => setTimeout(res, 500));
+            this.changeCircuitState('pulsing');
 
-        await new Promise(res => setTimeout(res, 2500));
-        consoleElement.classList.add('raised');
+            await new Promise(res => setTimeout(res, 2500));
+            consoleElement.classList.add('raised');
+        } else {
+            await new Promise(res => setTimeout(res, 600));
+            consoleElement.classList.add('raised');
+        }
 
         await new Promise(res => setTimeout(res, 300));
         consoleElement.classList.remove('collapsed');
@@ -236,8 +336,8 @@ const weatherConsole = {
         await new Promise(res => setTimeout(res, 500));
         this.swapScreen('sunrise');
 
-        // await new Promise(res => setTimeout(res, 1500));
-        // this.displayText('Hello!');
+        await new Promise(res => setTimeout(res, 1500));
+        this.displayText(`Mobile Test Branch Version: ${testVersion}`);
 
         // await new Promise(res => setTimeout(res, 1500));
         // this.displayText("I can tell you the weather");
@@ -247,7 +347,6 @@ const weatherConsole = {
 
         await new Promise(res => setTimeout(res, 500));
         this.enableInput();
-
     },
 
     async enableInput() {
@@ -255,8 +354,168 @@ const weatherConsole = {
         this.consoleInput.classList.remove('blurOut');
         this.inputEnabled = true;
 
-        await new Promise(res => setTimeout(res, 500));
+        await new Promise(res => setTimeout(res, 1000));
         pillarArray.raiseButton('searchGlyph');
+    },
+
+    activeParticles: false,
+    dropFrequency: (1920 / innerWidth) * 20,
+    snowFrequency: (1920 / innerWidth) * 200,
+    dropSpeed: (innerHeight / 1080) * .7,
+    snowSpeed: (innerHeight / 1080) * 8,
+    async makeRainSnow(particleType) {
+        this.activeParticles = true;
+        const body = document.querySelector('body');
+        const particleFrequency = particleType === 'rain' ? this.dropFrequency : this.snowFrequency;
+        const particleSpeed = particleType === 'rain' ? this.dropSpeed : this.snowSpeed;
+        
+        while (this.activeParticles) {
+            const particle = document.createElement('div');
+            particle.classList.add(particleType);
+            particle.style.left = `${getRandomInt(0, innerWidth)}px`;
+            const fallDistance = particleType === 'rain' ? getRandomInt(20, 100) : getRandomInt(60, 110);
+            particle.style.animationDuration = `${fallDistance / 100 * particleSpeed}s`;
+            particle.style.top = `${fallDistance}%`;
+            body.appendChild(particle);
+
+            particle.addEventListener('animationend', () => {
+                particle.remove();
+            });
+
+            await new Promise(res => setTimeout(res, particleFrequency));
+        }
+    },
+
+    flashing: false,
+    setFlashState(state) {
+        if (state) {
+            this.flashing = true;
+            setTimeout(() => {
+                this.lightningFlash();
+            }, 3000);
+        } else {
+            this.flashing = false;
+        }
+    },
+
+    lightningFlash() {
+        if (!this.flashing) {
+            return;
+        }
+
+        this.displayFilter.classList.add('lightningFlash');
+        this.displayFilter.addEventListener('animationend', () => {
+            this.displayFilter.classList.remove('lightningFlash');
+        });
+
+        setTimeout(() => {
+            this.lightningFlash();
+        }, getRandomInt(4000, 8000));
+    },
+}
+
+const rayController = {
+    sun: document.querySelector('#sun'),
+    rays: [],
+    diagonal: Math.sqrt(Math.pow((innerHeight * 3), 2) + Math.pow((innerWidth * .5), 2)),
+    initializeSun() {
+        const angle = ((Math.atan((innerWidth * .5) / (innerHeight * 2)) * 180) / Math.PI);
+        
+        // let maxAngle = ((Math.atan((innerWidth * 2) / innerHeight) * 180) / Math.PI);
+        // const minAngle = ((Math.atan((innerWidth) / (innerHeight * 2)) * 180) / Math.PI) - 10;
+        let currentAngle = angle * -1;
+
+        const rayCount = isMobile ? 15 : 20;
+        for (let i = 0; i < rayCount; i++) {
+            const rayElement = document.createElement('div');
+            rayElement.classList.add('ray');
+            this.rays.push(rayElement);
+            this.sun.appendChild(rayElement);
+        }
+
+        for (let ray of this.rays) {
+            const rayWidth = isMobile ? 15 : 50;
+            ray.style.width = `${rayWidth * (getRandomInt(5, 10) * .1)}px`;
+            ray.style.transform = `rotate(${currentAngle}deg)`;
+
+            currentAngle += (angle * 2) / this.rays.length;
+        }
+
+        this.alternateRayArray = [...this.rays];
+        this.minRayCount = isMobile ? this.rays.length / 4 : this.rays.length / 2;
+    },
+
+    shining: false,
+    rayStart(delay) {
+        this.shining = true;
+        this.sun.classList.add('rotateReset');
+
+        for (let ray of this.rays) {
+            const rayChance = isMobile ? getRandomInt(-1, 1) : getRandomInt(0, 1);
+            if (rayChance > 0) {
+                this.randomizeRay(ray);
+                this.activeRayCount++;
+            }
+        }
+
+        setTimeout(() => {
+            this.alternateRays(delay);
+        }, delay);
+    },
+
+    rayEnd() {
+        if (!this.shining) {
+            return;
+        }
+
+        this.shining = false;
+        setTimeout(() => {
+            if (!this.shining) {
+                this.sun.classList.remove('rotateReset');
+            }
+        }, 3000);
+
+        for (let ray of this.rays) {
+            ray.style.opacity = 0;
+        }
+    },
+
+    alternateRayArray: [],
+    activeRayCount: 0,
+    minRayCount: 0,
+    alternateRays(delay) {
+        if (!this.shining) {
+            return;
+        }
+
+        if (this.alternateRayArray.length > 0) {
+            const chosenRay = this.alternateRayArray.splice(getRandomInt(0, this.alternateRayArray.length - 1), 1);
+            if (chosenRay[0].style.opacity != 0 && this.activeRayCount > this.minRayCount) {
+                chosenRay[0].style.opacity = 0;
+                this.activeRayCount--;
+            } else if (chosenRay[0].style.opacity == 0) {
+                this.randomizeRay(chosenRay[0]);
+                this.activeRayCount++;
+            }
+
+            setTimeout(() => {
+                this.alternateRayArray.push(chosenRay[0]);
+                if (!this.shining) {
+                    chosenRay[0].style.opacity = 0;
+                }
+            }, 4000);
+        }
+
+        setTimeout(() => {
+            this.alternateRays(delay);
+        }, delay);
+    },
+
+    randomizeRay(ray) {
+        // adjust these values tomorrow
+        const heightModifier = isMobile ? getRandomInt(100, 115) * .01 : getRandomInt(85, 115) * .01;
+        ray.style.height = `${this.diagonal * heightModifier}px`;
+        ray.style.opacity = `${getRandomInt(5, 8) * .1}`;
     }
 }
 
@@ -272,7 +531,7 @@ const windController = {
 
     // Creates a random group of wind lines moving in the given direction
     pastCoordinates: [],
-    createWindgroup(windAngle, delay = 4000) {
+    createWindgroup(windAngle, delay = 6000) {
         if (!this.activeWind) {
             return;
         }
@@ -282,26 +541,26 @@ const windController = {
         windStyle.windAngle = windAngle;
         windStyle.lineVariant = getRandomInt(1, 3);
         const windGroupSize = getRandomInt(3, 6);
-        windStyle.duration = ((Math.sqrt(Math.pow(window.screen.width, 2) + Math.pow(window.screen.height, 2)) + 400) / 4000) * 15000;
+        windStyle.duration = ((Math.sqrt(Math.pow(screenWidth, 2) + Math.pow(screenHeight, 2)) + 400) / 4000) * 15000;
 
         if (windAngle === 0 || windAngle === 360) {
-            windStyle.left = getRandomInt(-100, window.innerWidth);
+            windStyle.left = getRandomInt(-100, innerWidth);
             windStyle.leftAfter = 0;
             windStyle.bottom = -200;
             windStyle.bottomAfter = 3800;
             windStyle.swapSides = true;
         } else if (windAngle === 90) {
-            windStyle.bottom = getRandomInt(-100, window.innerHeight);
+            windStyle.bottom = getRandomInt(-100, innerHeight);
             windStyle.bottomAfter = 0;
             windStyle.left = -200;
             windStyle.leftAfter = 3800;
         } else if (windAngle === 180) {
-            windStyle.left = getRandomInt(-100, window.innerWidth);
+            windStyle.left = getRandomInt(-100, innerWidth);
             windStyle.leftAfter = 0;
             windStyle.top = -200;
             windStyle.topAfter = 3800;
         } else if (windAngle === 270) {
-            windStyle.bottom = getRandomInt(-100, window.innerHeight);
+            windStyle.bottom = getRandomInt(-100, innerHeight);
             windStyle.bottomAfter = 0;
             windStyle.right = -200;
             windStyle.rightAfter = 3800;
@@ -334,15 +593,15 @@ const windController = {
                 subsectionAngle = 90 - (windAngle % 90);
             }
 
-            let subsection = (((Math.tan(subsectionAngle * (Math.PI / 180))) * window.innerHeight) * window.innerHeight) / 2;
-            let ratio = subsection / (window.innerHeight * window.innerWidth);
+            let subsection = (((Math.tan(subsectionAngle * (Math.PI / 180))) * innerHeight) * innerHeight) / 2;
+            let ratio = subsection / (innerHeight * innerWidth);
             if (ratio > .5) {
-                subsection = (((Math.tan((90 - subsectionAngle) * (Math.PI / 180))) * window.innerWidth) * window.innerWidth) / 2;
-                ratio = 1 - (subsection / (window.innerHeight * window.innerWidth));
+                subsection = (((Math.tan((90 - subsectionAngle) * (Math.PI / 180))) * innerWidth) * innerWidth) / 2;
+                ratio = 1 - (subsection / (innerHeight * innerWidth));
             }
 
             if (getRandomInt(1, 1000) < ratio * 1000) {
-                let yPosition = getRandomInt(-200, window.innerHeight - 200);
+                let yPosition = getRandomInt(-200, innerHeight - 200);
                 let validity = false;
                 if (this.pastCoordinates.length > 0 && !isMobile) {
                     while (!validity) {
@@ -354,7 +613,7 @@ const windController = {
                         }
 
                         if (!validity) {
-                            yPosition = getRandomInt(-200, window.innerHeight - 200);
+                            yPosition = getRandomInt(-200, innerHeight - 200);
                         }
                     }
                 }
@@ -368,7 +627,7 @@ const windController = {
                 windStyle[`${directionOne}After`] = windStyle.swapSides ? sideTwo  : sideOne;
                 windStyle[`${directionTwo}After`] = windStyle.swapSides ? sideOne  : sideTwo;
             } else {
-                let xPosition = getRandomInt(-200, window.innerWidth);
+                let xPosition = getRandomInt(-200, innerWidth);
                 let validity = false;
                 if (this.pastCoordinates.length > 0 && !isMobile) {
                     while (!validity) {
@@ -380,7 +639,7 @@ const windController = {
                         }
 
                         if (!validity) {
-                            xPosition = getRandomInt(-200, window.innerHeight);
+                            xPosition = getRandomInt(-200, innerHeight);
                         }
                     }
                 }
@@ -486,10 +745,10 @@ const pillarArray = {
 
         const backgroundLayer = document.querySelector('.backgroundLayer');
         backgroundLayer.style['margin-top'] = `${60 * (cellSize / defaultCellSize)}px`;
-        this.columns = Math.floor((window.innerWidth) / cellSize);
+        this.columns = Math.floor((innerWidth) / cellSize);
         this.columns = this.columns % 2 == 0 ? this.columns : this.columns + 1;
         backgroundLayer.style['gridTemplateColumns'] = `repeat(${this.columns}, ${cellSize}px)`;
-        this.rows = Math.floor((window.innerHeight) / cellSize);
+        this.rows = Math.floor((innerHeight) / cellSize);
         backgroundLayer.style['gridTemplateRows'] = `repeat(${this.rows}, ${cellSize}px)`;
         let pillarNum = this.columns * this.rows;
         let rowIndex = 0;
@@ -773,7 +1032,7 @@ const pillarArray = {
     async enableRefresh() {
         this.refreshEnabled = true;
 
-        await new Promise(res => setTimeout(res, 1000));
+        await new Promise(res => setTimeout(res, 1500));
         this.raiseButton('refreshGlyph');
     },
 
@@ -784,9 +1043,7 @@ const pillarArray = {
         }
 
         // weatherConsole.changeCircuitState('pulsing');
-        this.refreshEnabled = false;
-        this.wobbling = false;
-        windController.toggleActiveWind(false);
+        weatherConsole.disableWeatherEffects();
 
         weatherConsole.displayText('Where would you like to look? \n \n');
         setTimeout(() => {
