@@ -1,6 +1,5 @@
 let isMobile;
 const defaultCellSize = 130;
-const testVersion = '1.9';
 const screenWidth = window.screen.width;
 const screenHeight = window.screen.height;
 const innerWidth = window.innerWidth;
@@ -335,12 +334,6 @@ const weatherConsole = {
 
         await new Promise(res => setTimeout(res, 500));
         this.swapScreen('sunrise');
-
-        await new Promise(res => setTimeout(res, 1500));
-        this.displayText(`Mobile Test Branch Version: ${testVersion}`);
-
-        // await new Promise(res => setTimeout(res, 1500));
-        // this.displayText("I can tell you the weather");
 
         await new Promise(res => setTimeout(res, 1500));
         this.displayText('Where would you like to look? \n \n');
